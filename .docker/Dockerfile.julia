@@ -1,0 +1,31 @@
+FROM julia:1.10.9-bookworm
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for running Julia
+RUN useradd -m -s /bin/bash -u 1000 julia
+
+# Make sure JULIA_DEPOT_PATH is owned by the julia user
+RUN mkdir -p /home/julia/.julia && chown -R julia:julia /home/julia
+RUN mkdir -p /app/notebooks && chown -R julia:julia /app/notebooks
+
+# Switch to the julia user for package installation
+USER julia
+
+# Install packages with specific versions
+RUN julia -e 'using Pkg; Pkg.add(["Pluto", "PlutoUI", "HTTP", "Plots"]); Pkg.precompile(); using Pluto;'
+
+
+# Default command
+CMD ["julia", "-e", "using Pluto; Pluto.run(host=\"0.0.0.0\", port=1234, launch_browser=false)"]

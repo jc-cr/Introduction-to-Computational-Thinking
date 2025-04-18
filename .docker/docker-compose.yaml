@@ -1,0 +1,24 @@
+# File: docker-compose.yml
+services:
+  pluto:
+    build:
+      context: .
+      dockerfile: Dockerfile.julia
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - JULIA_DEPOT_PATH=/home/julia/.julia
+    volumes:
+      - ../notebooks:/app/notebooks
+    ports:
+      - "8888:8888"  # Changed to a different port
+    command: >
+      julia -e '
+        using Pluto;
+        Pluto.run(
+          host="0.0.0.0",
+          port=8888,  # Changed to match port mapping
+          launch_browser=false,
+          require_secret_for_open_links=false,
+          require_secret_for_access=false,
+          show_file_system=true
+        )'
